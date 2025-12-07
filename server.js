@@ -38,6 +38,52 @@ app.post('/api/login', (req, res) => {
         userId = userId.split('@')[0];
     }
 
+// 1. เช็คในตารางนิสิต
+    const sqlStudent = "SELECT * FROM student WHERE stu_id = ? OR stu_buasri = ?";
+    
+    db.query(sqlStudent, [userId, userId], (err, results) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดที่ Server' });
+        }
+
+        if (results.length > 0) {
+            const user = results[0];
+            return res.json({
+                success: true,
+                role: 'student',
+                user: {
+                    id: user.stu_id,
+                    name: user.stu_name,
+                    email: user.stu_id + '@g.swu.ac.th',
+                    major: user.stu_major
+                }
+            });
+        } else {
+            // 2. ถ้าไม่เจอนิสิต ลองเช็คในตารางบุคลากร
+            const sqlStaff = "SELECT * FROM staff WHERE staff_id = ? OR staff_buasri = ?";
+            db.query(sqlStaff, [userId, userId], (err, staffResults) => {
+                if (err) return res.status(500).json({ success: false, message: err.message });
+
+                if (staffResults.length > 0) {
+                    const staff = staffResults[0];
+                    return res.json({
+                        success: true,
+                        role: 'staff',
+                        user: {
+                            id: staff.staff_id,
+                            name: staff.staff_name,
+                            email: staff.staff_email || (staff.staff_buasri + '@g.swu.ac.th')
+                        }
+                    });
+                } else {
+                    return res.status(401).json({ success: false, message: 'ไม่พบข้อมูลผู้ใช้งานในระบบ' });
+                }
+            });
+        }
+    });
+});
+
 app.post('/api/tickets', (req, res) => {
     const { user_id, category, sub_category, title, description, department, wants_reply } = req.body;
 
@@ -81,52 +127,6 @@ app.get('/api/tickets/:userId', (req, res) => {
             return res.status(500).json({ success: false, message: err.message });
         }
         res.json({ success: true, data: results });
-    });
-});
-
-    // 1. เช็คในตารางนิสิต
-    const sqlStudent = "SELECT * FROM student WHERE stu_id = ? OR stu_buasri = ?";
-    
-    db.query(sqlStudent, [userId, userId], (err, results) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดที่ Server' });
-        }
-
-        if (results.length > 0) {
-            const user = results[0];
-            return res.json({
-                success: true,
-                role: 'student',
-                user: {
-                    id: user.stu_id,
-                    name: user.stu_name,
-                    email: user.stu_id + '@g.swu.ac.th',
-                    major: user.stu_major
-                }
-            });
-        } else {
-            // 2. ถ้าไม่เจอนิสิต ลองเช็คในตารางบุคลากร
-            const sqlStaff = "SELECT * FROM staff WHERE staff_id = ? OR staff_buasri = ?";
-            db.query(sqlStaff, [userId, userId], (err, staffResults) => {
-                if (err) return res.status(500).json({ success: false, message: err.message });
-
-                if (staffResults.length > 0) {
-                    const staff = staffResults[0];
-                    return res.json({
-                        success: true,
-                        role: 'staff',
-                        user: {
-                            id: staff.staff_id,
-                            name: staff.staff_name,
-                            email: staff.staff_email || (staff.staff_buasri + '@g.swu.ac.th')
-                        }
-                    });
-                } else {
-                    return res.status(401).json({ success: false, message: 'ไม่พบข้อมูลผู้ใช้งานในระบบ' });
-                }
-            });
-        }
     });
 });
 
