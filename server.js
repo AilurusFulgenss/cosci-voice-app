@@ -173,6 +173,39 @@ app.put('/api/tickets/:id', (req, res) => {
     });
 });
 
+app.post('/api/tickets', (req, res) => {
+    // ✅ เพิ่ม major เข้ามารับค่า
+    const { user_id, major, category, sub_category, title, description, department, wants_reply } = req.body;
+
+    console.log('ได้รับข้อมูล Ticket:', req.body);
+
+    const sql = `
+        INSERT INTO tickets 
+        (user_id, major, category, sub_category, title, description, department, wants_reply, status) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'new')
+    `;
+
+    const values = [
+        user_id, 
+        major || 'ไม่ระบุ', // ✅ เพิ่ม major ลงใน values
+        category, 
+        sub_category || '', 
+        title, 
+        description, 
+        department, 
+        wants_reply === 'yes' ? 1 : 0 
+    ];
+
+    db.query(sql, values, (err, result) => {
+        if (err) {
+            console.error('เกิดข้อผิดพลาดในการบันทึก:', err);
+            return res.status(500).json({ success: false, message: 'บันทึกข้อมูลไม่สำเร็จ: ' + err.message });
+        }
+        console.log('บันทึก Ticket สำเร็จ ID:', result.insertId);
+        res.json({ success: true, message: 'ส่งเรื่องเรียบร้อยแล้ว!', ticketId: result.insertId });
+    });
+});
+
 app.listen(PORT, () => {
     console.log(`🚀 Server is running on http://localhost:${PORT}`);
 });

@@ -28,9 +28,25 @@
         suggestion: { title: 'ข้อเสนอแนะ', hasSubCategory: false, dbValue: 'ข้อเสนอแนะ' },
     };
 
+    const majorsList = [
+    "วิชาเอกการออกแบบสื่อปฏิสัมพันธ์และมัลติมีเดีย",
+    "วิชาเอกการจัดการธุรกิจไซเบอร์",
+    "วิชาเอกนวัตกรรมคอมพิวเตอร์เพื่อการสื่อสาร",
+    "วิชาเอกการผลิตภาพยนตร์และสื่อดิจิทัล",
+    "วิชาเอกการแสดงและกำกับการแสดงภาพยนตร์",
+    "วิชาเอกการออกแบบเพื่องานภาพยนตร์และสื่อดิจิทัล",
+    "วิชาเอกการจัดการภาพยนตร์และสื่อดิจิทัล",
+    "วิชาเอกการสื่อสารเพื่อการท่องเที่ยว",
+    "วิชาเอกการสื่อสารเพื่อสุขภาพ",
+    "วิชาเอกการสื่อสารเพื่อการจัดการนวัตกรรม",
+    "วิชาเอกการสื่อสารเพื่อเศรษฐศาสตร์",
+    "อื่นๆ"
+];
+
     const currentForm = formConfig[type] || formConfig.complaint;
 
     const [formData, setFormData] = useState({
+        major: '',
         subCategory: '',
         title: '',
         description: '',
@@ -54,7 +70,8 @@
 
         // เตรียมข้อมูลที่จะส่งไป Server
         const payload = {
-            user_id: user.id,           // ไอดีคนแจ้ง (จาก localStorage)
+            user_id: user.id,
+            major: formData.major,           
             category: currentForm.dbValue, // ประเภทเรื่อง
             sub_category: formData.subCategory,
             title: formData.title,
@@ -103,6 +120,22 @@
             <Form onSubmit={handleSubmit}>
                 
                 {/* หมวดหมู่ย่อย (เฉพาะข้อร้องเรียน) */}
+                <Form.Group as={Row} className="mb-4 align-items-center">
+                <Form.Label column sm="3" className="fw-bold text-dark">สาขาวิชาเอกของผู้แจ้ง</Form.Label>
+                <Col sm="9">
+                    <Form.Select 
+                        name="major" 
+                        className="rounded-pill py-2 px-3 border-secondary-subtle"
+                        onChange={handleChange}
+                        required
+                    >
+                        <option value="">-- โปรดเลือกสาขา --</option>
+                        {majorsList.map((m, index) => (
+                            <option key={index} value={m}>{m}</option>
+                        ))}
+                    </Form.Select>
+                </Col>
+            </Form.Group>
                 {currentForm.hasSubCategory && (
                 <Form.Group as={Row} className="mb-4 align-items-center">
                     <Form.Label column sm="3" className="fw-bold text-dark">เลือกหมวดหมู่ย่อย</Form.Label>
