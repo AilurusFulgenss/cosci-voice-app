@@ -13,7 +13,7 @@ const LoginPage = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError(''); 
+    setError('');
 
     try {
         const response = await fetch('http://localhost:3000/api/login', {
@@ -25,13 +25,28 @@ const LoginPage = () => {
         const data = await response.json();
 
         if (data.success) {
-            localStorage.setItem('user', JSON.stringify(data.user));
+            // Login สำเร็จ
+            
+            // 🔥🔥🔥 แก้ไขตรงนี้ครับ 🔥🔥🔥
+            // เดิม: localStorage.setItem('user', JSON.stringify(data.user)); 
+            // เปลี่ยนเป็น: เอา role จาก data.role มารวมกับ data.user ก่อนบันทึก
+            
+            const userWithRole = { ...data.user, role: data.role };
+            localStorage.setItem('user', JSON.stringify(userWithRole));
+            
+            // 🔥🔥🔥 จบส่วนแก้ไข 🔥🔥🔥
+
             alert('ยินดีต้อนรับ: ' + data.user.name);
-            window.location.href = '/'; 
+            
+            if (data.role === 'staff' || data.role === 'admin') {
+                window.location.href = '/admin';
+            } else {
+                window.location.href = '/';
+            }
+            
         } else {
             setError(data.message || 'เข้าสู่ระบบไม่สำเร็จ');
         }
-
     } catch (err) {
         console.error('Error:', err);
         setError('เชื่อมต่อ Server ไม่ได้ (ตรวจสอบว่ารัน node server.js หรือยัง)');
@@ -47,8 +62,8 @@ const LoginPage = () => {
         <p className="opacity-75 fw-light">COSCI Voice of Customer</p>
       </div>
 
-      {/* 2. แก้ที่ Card: เพิ่ม maxWidth เป็น 550px */}
-      <Card className="border-0 shadow-lg rounded-4 overflow-hidden w-100" style={{ maxWidth: '550px' }}>
+      {/* 2. แก้ที่ Card: เพิ่ม maxWidth เป็น 650px */}
+      <Card className="border-0 shadow-lg rounded-4 overflow-hidden w-100" style={{ maxWidth: '650px' }}>
         <Card.Body className="p-5">
           <Form onSubmit={handleLogin}>
             

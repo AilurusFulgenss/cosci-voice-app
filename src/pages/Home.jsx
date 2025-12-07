@@ -39,12 +39,12 @@ import { Link } from 'react-router-dom';
             <Col lg={6} className="d-none d-lg-block text-end">
                 <div className="bg-white rounded-4 shadow-sm" 
                     style={{
-                    height: '350px', 
-                    width: '90%', 
-                    marginLeft: 'auto',
+                    height: '400px', 
+                    width: '120%', 
+                    marginLeft: '-25%',
                     transform: 'rotate(-2deg)',
                     // ✅ แก้ลิงก์ตรงนี้ครับ
-                    backgroundImage: 'url("https://placehold.co/800x600")', 
+                    backgroundImage: 'url("http://cosci.swu.ac.th/storage/web/lK5THCuQk7xYkDltPN3ZCS4kMSkZjNJ8x0vpnXJe.png")',
                     backgroundSize: 'cover',
                     backgroundPosition: 'center'
                     }}>

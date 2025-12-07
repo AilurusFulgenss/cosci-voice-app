@@ -143,3 +143,20 @@
         color: #0d6efd; 
         font-weight: bold; 
     }
+
+    .admin-tab-link {
+    color: #495057 !important; /* สีเทาเข้ม (ตอนยังไม่เลือก) */
+    transition: all 0.3s ease;
+    }
+
+    .admin-tab-link:hover {
+    color: #0d6efd !important; /* สีฟ้า (ตอนเอาเมาส์ชี้) */
+    background-color: #e9ecef; /* พื้นหลังเทาจางๆ */
+    }
+
+/* ตอนถูกเลือก (Active) */
+    .nav-pills .nav-link.active.admin-tab-link {
+    color: white !important;      /* ตัวหนังสือสีขาว */
+    background-color: #0d6efd !important; /* พื้นหลังสีน้ำเงิน */
+    box-shadow: 0 4px 6px rgba(13, 110, 253, 0.3);
+    }

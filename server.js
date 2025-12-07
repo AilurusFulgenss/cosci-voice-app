@@ -130,6 +130,49 @@ app.get('/api/tickets/:userId', (req, res) => {
     });
 });
 
+app.get('/api/admin/tickets', (req, res) => {
+    // ✅ แก้ไข: เพิ่ม DISTINCT เพื่อป้องกันข้อมูลซ้ำ และ GROUP BY ticket.id เพื่อความชัวร์
+    const sql = `
+        SELECT DISTINCT tickets.*, 
+        COALESCE(student.stu_name, staff.staff_name, 'Unknown') AS reporter_name 
+        FROM tickets 
+        LEFT JOIN student ON tickets.user_id = student.stu_id 
+        LEFT JOIN staff ON tickets.user_id = staff.staff_id 
+        GROUP BY tickets.id
+        ORDER BY tickets.created_at DESC
+    `;
+
+    db.query(sql, (err, results) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ success: false, message: 'ดึงข้อมูลไม่สำเร็จ' });
+        }
+        res.json({ success: true, data: results });
+    });
+});
+
+// --- API: Admin อัปเดตสถานะและตอบกลับ ---
+app.put('/api/tickets/:id', (req, res) => {
+    const ticketId = req.params.id;
+    const { status, admin_reply } = req.body; 
+
+    const sql = "UPDATE tickets SET status = ?, admin_reply = ? WHERE id = ?";
+
+    db.query(sql, [status, admin_reply, ticketId], (err, result) => {
+        if (err) {
+            console.error('Update Error:', err);
+            return res.status(500).json({ success: false, message: 'อัปเดตข้อมูลไม่สำเร็จ' });
+        }
+
+        // ✅ แก้ตรงนี้: เอา result มาเช็คว่ามีแถวไหนถูกกระทบไหม (ถ้า 0 แปลว่าหา ID ไม่เจอ)
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ success: false, message: 'ไม่พบรหัสเรื่องที่ระบุ' });
+        }
+
+        res.json({ success: true, message: 'บันทึกการดำเนินการเรียบร้อย' });
+    });
+});
+
 app.listen(PORT, () => {
     console.log(`🚀 Server is running on http://localhost:${PORT}`);
 });
