@@ -54,7 +54,7 @@ const TrackingPage = () => {
         }
         const user = JSON.parse(savedUser);
 
-        fetch(`http://localhost:3000/api/tickets/${user.id}`)
+        fetch(`/api/tickets/${user.id}`)
             .then(res => res.json())
             .then(data => {
                 if (data.success) {

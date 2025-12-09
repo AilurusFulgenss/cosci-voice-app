@@ -28,7 +28,7 @@ const AdminHistory = () => {
     const [selectedMajor, setSelectedMajor] = useState("ทั้งหมด");
 
     useEffect(() => {
-        fetch('http://localhost:3000/api/admin/tickets')
+        fetch('/api/admin/tickets')
             .then(res => res.json())
             .then(data => {
                 if (data.success) {

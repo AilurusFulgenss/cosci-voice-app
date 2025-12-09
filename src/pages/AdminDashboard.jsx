@@ -37,7 +37,7 @@ const AdminDashboard = () => {
     // ฟังก์ชันดึงข้อมูล
     const fetchTickets = useCallback(() => {
         // ไม่ต้อง setLoading(true) ตรงนี้ เพื่อกัน Loop ตอนโหลดครั้งแรก
-        fetch('http://localhost:3000/api/admin/tickets')
+        fetch('/api/admin/tickets')
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
@@ -81,7 +81,7 @@ const AdminDashboard = () => {
     // ฟังก์ชันบันทึกข้อมูล
     const handleSave = async () => {
         try {
-            const response = await fetch(`http://localhost:3000/api/tickets/${selectedTicket.id}`, {
+            const response = await fetch(`/api/tickets/${selectedTicket.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updateData)
