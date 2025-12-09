@@ -88,6 +88,52 @@ app.post('/api/login', (req, res) => {
     });
 });
 
+app.post('/api/tickets', (req, res) => {
+    const { user_id, category, sub_category, title, description, department, wants_reply } = req.body;
+
+    console.log('ได้รับข้อมูล Ticket:', req.body);
+
+    const sql = `
+        INSERT INTO tickets 
+        (user_id, category, sub_category, title, description, department, wants_reply, status) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, 'new')
+    `;
+
+    const values = [
+        user_id, 
+        category, 
+        sub_category || '', // ถ้าไม่มีหมวดหมู่ย่อย ให้ใส่ค่าว่าง
+        title, 
+        description, 
+        department, 
+        wants_reply === 'yes' ? 1 : 0 // แปลงค่า 'yes' เป็น 1 (True), 'no' เป็น 0 (False)
+    ];
+
+    db.query(sql, values, (err, result) => {
+        if (err) {
+            console.error('เกิดข้อผิดพลาดในการบันทึก:', err);
+            return res.status(500).json({ success: false, message: 'บันทึกข้อมูลไม่สำเร็จ: ' + err.message });
+        }
+
+        console.log('บันทึก Ticket สำเร็จ ID:', result.insertId);
+        res.json({ success: true, message: 'ส่งเรื่องเรียบร้อยแล้ว!', ticketId: result.insertId });
+    });
+});
+
+app.get('/api/tickets/:userId', (req, res) => {
+    const userId = req.params.userId;
+
+    // ดึงข้อมูล เรียงจากใหม่ไปเก่า (DESC)
+    const sql = "SELECT * FROM tickets WHERE user_id = ? ORDER BY created_at DESC";
+
+    db.query(sql, [userId], (err, results) => {
+        if (err) {
+            return res.status(500).json({ success: false, message: err.message });
+        }
+        res.json({ success: true, data: results });
+    });
+});
+
 app.get('/api/admin/tickets', (req, res) => {
     const sql = `
         SELECT DISTINCT tickets.*, 
@@ -108,6 +154,31 @@ app.get('/api/admin/tickets', (req, res) => {
     });
 });
 
+<<<<<<< HEAD:api/index.js
+=======
+// --- API: Admin อัปเดตสถานะและตอบกลับ ---
+app.put('/api/tickets/:id', (req, res) => {
+    const ticketId = req.params.id;
+    const { status, admin_reply } = req.body; 
+
+    const sql = "UPDATE tickets SET status = ?, admin_reply = ? WHERE id = ?";
+
+    db.query(sql, [status, admin_reply, ticketId], (err, result) => {
+        if (err) {
+            console.error('Update Error:', err);
+            return res.status(500).json({ success: false, message: 'อัปเดตข้อมูลไม่สำเร็จ' });
+        }
+
+        // ✅ แก้ตรงนี้: เอา result มาเช็คว่ามีแถวไหนถูกกระทบไหม (ถ้า 0 แปลว่าหา ID ไม่เจอ)
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ success: false, message: 'ไม่พบรหัสเรื่องที่ระบุ' });
+        }
+
+        res.json({ success: true, message: 'บันทึกการดำเนินการเรียบร้อย' });
+    });
+});
+
+>>>>>>> parent of 8c176fe (final draft ก่อนจบ):server.js
 app.post('/api/tickets', (req, res) => {
     const { user_id, major, category, sub_category, title, description, department, wants_reply } = req.body;
 

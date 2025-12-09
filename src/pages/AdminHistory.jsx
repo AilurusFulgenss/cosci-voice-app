@@ -53,8 +53,6 @@ const AdminHistory = () => {
         return isMatchYear && isMatchMajor;
     });
 
-// ************************************* UI หลัก *********************************************
-
     return (
         <Container fluid className="p-4 p-md-5" style={{minHeight: '100vh', backgroundColor: '#f0f2f5'}}>
             
@@ -63,7 +61,6 @@ const AdminHistory = () => {
             </div>
 
             <div className="bg-white p-4 rounded-4 shadow-sm mt-3">
-
                 <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
                     <h4 className="fw-bold text-secondary mb-0">ประวัติการดำเนินการที่เสร็จสิ้น</h4>
                     
@@ -72,10 +69,10 @@ const AdminHistory = () => {
                         <Form.Select 
                             value={selectedMajor} 
                             onChange={(e) => setSelectedMajor(e.target.value)}
-                            style={{ maxWidth: '300px' }}
+                            style={{maxWidth: '300px'}}
                             className="border-secondary text-secondary"
                         >
-                            {majorsList.map((m, i) => <option key={i} value={m}>{m}</option>)}
+                             {majorsList.map((m, i) => <option key={i} value={m}>{m}</option>)}
                         </Form.Select>
 
                         {/* ตัวกรองปี */}

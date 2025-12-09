@@ -90,9 +90,9 @@ const TrackingPage = () => {
             </div>
 
             {loading ? (
-                <div className="text-white">กำลังโหลดข้อมูล...</div>
+                 <div className="text-white">กำลังโหลดข้อมูล...</div>
             ) : tickets.length === 0 ? (
-                <div className="text-white opacity-75 mt-5">ไม่พบรายการที่กำลังดำเนินการ</div>
+                 <div className="text-white opacity-75 mt-5">ไม่พบรายการที่กำลังดำเนินการ</div>
             ) : (
                 tickets.map((ticket) => (
                     <Card key={ticket.id} className="border-0 shadow rounded-4 mb-4 overflow-hidden w-100" style={{maxWidth: '900px'}}>
