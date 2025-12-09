@@ -1,26 +1,27 @@
-// server.js (ฉบับแก้ไข - รองรับ Railway / Cloud DB)
+// server.js (ฉบับแก้ไข - รองรับ ES Modules)
 import express from 'express';
 import mysql from 'mysql2';
 import cors from 'cors';
 import bodyParser from 'body-parser';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
 
 const app = express();
-// ✅ แก้ไข 1: ให้ใช้ Port จากระบบ (ถ้าไม่มีถึงใช้ 3000) จำเป็นมากสำหรับ Railway
-const PORT = process.env.PORT || 3000;
+const PORT = 3000;
 
 app.use(cors());
 app.use(bodyParser.json());
 
-// ✅ แก้ไข 2: เปลี่ยนการเชื่อมต่อ Database ให้รองรับ Environment Variables
+// ตั้งค่าการเชื่อมต่อฐานข้อมูล
 const db = mysql.createConnection({
-    // ถ้ามีค่าใน env (บน Cloud) ให้ใช้ค่าจาก env
-    // ถ้าไม่มี (รันเครื่องตัวเอง) ให้ใช้ค่า default หลัง ||
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'cosci_system',
-    port: process.env.DB_PORT || 3306
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    database: process.env.DB_NAME
 });
+
 
 db.connect((err) => {
     if (err) {
@@ -179,5 +180,5 @@ app.post('/api/tickets', (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`🚀 Server is running on port ${PORT}`);
+    console.log(`🚀 Server is running on http://localhost:${PORT}`);
 });
