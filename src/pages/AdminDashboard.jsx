@@ -124,6 +124,8 @@ const AdminDashboard = () => {
         return <Badge bg={map[status] || 'secondary'}>{status}</Badge>;
     };
 
+// ************************************* UI หลัก *********************************************
+
     return (
         <Container fluid className="p-4 p-md-5" style={{minHeight: '100vh', backgroundColor: '#f0f2f5'}}>
             
@@ -135,14 +137,14 @@ const AdminDashboard = () => {
             <div className="bg-white p-4 rounded-4 shadow-sm mt-3">
                 {/* หัวข้อ + ตัวกรอง + ปุ่ม Refresh */}
                 <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-                    <h4 className="fw-bold text-primary mb-0">รายการแจ้งเรื่องที่รอการดำเนินการ</h4>
                     
+                    <h4 className="fw-bold text-primary mb-0">รายการแจ้งเรื่องที่รอการดำเนินการ</h4>
                     <div className="d-flex gap-2 align-items-center">
                         {/* Dropdown เลือกสาขา */}
                         <Form.Select 
                             value={selectedMajor} 
                             onChange={(e) => setSelectedMajor(e.target.value)}
-                            style={{maxWidth: '350px'}}
+                            style={{ maxWidth: '450px' }}
                             className="shadow-sm border-primary"
                         >
                             {majorsList.map((m, i) => <option key={i} value={m}>{m}</option>)}
@@ -200,6 +202,8 @@ const AdminDashboard = () => {
                     </Table>
                 )}
             </div>
+
+{/***************************************** Modal แก้ไขงาน *****************************************/}
 
             {/* Modal แก้ไขงาน */}
             <Modal show={showModal} onHide={() => setShowModal(false)} centered>

@@ -53,10 +53,9 @@ const AppContent = () => {
           
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="ms-auto align-items-center gap-lg-4">
-              <NavLink to="/" className={({ isActive }) => isActive ? "nav-link fw-bold text-white" : "nav-link text-white opacity-75"}>
+                  <NavLink to="/" className={({ isActive }) => isActive ? "nav-link fw-bold text-white" : "nav-link text-white opacity-75"}>
                 แจ้งเรื่อง
-              </NavLink>
-              
+                  </NavLink>
               {user && (
                 <>
                   <NavLink to="/tracking" className={({ isActive }) => isActive ? "nav-link fw-bold text-white" : "nav-link text-white opacity-75"}>
