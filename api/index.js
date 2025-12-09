@@ -8,17 +8,16 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 
 // ตั้งค่า CORS
 app.use(cors({
-    origin: '*',
+    origin: '*', // หรือใส่โดเมน Frontend ของคุณ
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true
 }));
 app.use(bodyParser.json());
 
-// --- การเชื่อมต่อ Database (TiDB Cloud / Vercel) ---
+// --- เชื่อมต่อ Database ---
 const db = mysql.createPool({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
@@ -34,19 +33,13 @@ const db = mysql.createPool({
     }
 });
 
-// Test Connection
-db.getConnection((err, connection) => {
-    if (err) {
-        console.error('❌ Error connecting to database:', err);
-    } else {
-        console.log('✅ Connected to TiDB MySQL Database!');
-        connection.release();
-    }
+// --- API Routes ---
+// Vercel จะส่ง Request มาที่ /api/xxx เราต้องเขียน Route ให้รองรับ
+
+app.get('/', (req, res) => {
+    res.send('Cosci Voice API is running!');
 });
 
-// --- API Routes ---
-
-// 1. API Login
 app.post('/api/login', (req, res) => {
     const { email } = req.body;
     let userId = email;
@@ -95,7 +88,6 @@ app.post('/api/login', (req, res) => {
     });
 });
 
-// 2. API Admin: Get All Tickets
 app.get('/api/admin/tickets', (req, res) => {
     const sql = `
         SELECT DISTINCT tickets.*, 
@@ -116,7 +108,6 @@ app.get('/api/admin/tickets', (req, res) => {
     });
 });
 
-// 3. API: Create Ticket
 app.post('/api/tickets', (req, res) => {
     const { user_id, major, category, sub_category, title, description, department, wants_reply } = req.body;
 
@@ -146,7 +137,6 @@ app.post('/api/tickets', (req, res) => {
     });
 });
 
-// 4. API: Update Ticket Status & Reply
 app.put('/api/tickets/:id', (req, res) => {
     const ticketId = req.params.id;
     const { status, admin_reply } = req.body; 
@@ -165,7 +155,6 @@ app.put('/api/tickets/:id', (req, res) => {
     });
 });
 
-// 5. API: Get User History
 app.get('/api/tickets/:userId', (req, res) => {
     const userId = req.params.userId;
     const sql = "SELECT * FROM tickets WHERE user_id = ? ORDER BY created_at DESC";
@@ -178,11 +167,5 @@ app.get('/api/tickets/:userId', (req, res) => {
     });
 });
 
-// เริ่มรัน Server (เฉพาะ Local)
-if (process.env.NODE_ENV !== 'production') {
-    app.listen(PORT, () => {
-        console.log(`🚀 Server is running locally on http://localhost:${PORT}`);
-    });
-}
-
+// Export App สำหรับ Vercel (สำคัญมาก!)
 export default app;
