@@ -7,19 +7,24 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const express = require("express");
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000; 
 
 app.use(cors());
 app.use(bodyParser.json());
 
 // ตั้งค่าการเชื่อมต่อฐานข้อมูล
+// ตั้งค่าการเชื่อมต่อฐานข้อมูล
 const db = mysql.createConnection({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASS,
-    database: process.env.DB_NAME
+    database: process.env.DB_NAME,
+    // 👇 เพิ่มส่วนนี้เข้าไปเพื่อให้ TiDB ยอมรับการเชื่อมต่อครับ
+    ssl: {
+        minVersion: 'TLSv1.2',
+        rejectUnauthorized: true
+    }
 });
 
 
