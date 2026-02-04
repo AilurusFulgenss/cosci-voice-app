@@ -18,7 +18,7 @@ const LoginPage = () => {
 
     try {
         // 🔥 ยิงไปที่ localhost:3000 ตรงๆ เลย (แก้ปัญหาหา Server ไม่เจอ)
-        const res = await axios.post('http://localhost:3000/api/login', { 
+        const res = await axios.post('https://cosci-backend-pr6e.onrender.com/api/login', { 
             email: inputs.email,
             password: inputs.password 
         });

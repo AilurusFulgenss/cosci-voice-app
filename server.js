@@ -1,4 +1,4 @@
-/* eslint-env node */
+/* eslint-disable no-undef */
 // 👆 บรรทัดบนสุดนี้สำคัญมาก: บอก ESLint ว่า "นี่คือไฟล์ Node.js" (แก้ Error 1-4)
 
 import 'dotenv/config';
@@ -11,11 +11,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ตั้งค่า CORS
-app.use(cors({
-    origin: '*', 
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    credentials: true
-}));
+app.use(cors());
 app.use(bodyParser.json());
 
 // ตั้งค่าการเชื่อมต่อฐานข้อมูล
