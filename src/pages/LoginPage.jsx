@@ -2,10 +2,11 @@
 import React, { useState } from 'react';
 import { Container, Card, Form, Button } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
+import axios from 'axios'; // ✅ ใช้ axios แทน fetch เพื่อความง่าย
 
 const LoginPage = () => {
   const [inputs, setInputs] = useState({ email: '', password: '' });
-  const [error, setError] = useState(''); 
+  const [error, setError] = useState('');
 
   const handleChange = (e) => {
     setInputs({ ...inputs, [e.target.name]: e.target.value });
@@ -16,45 +17,53 @@ const LoginPage = () => {
     setError('');
 
     try {
-        const response = await fetch('/api/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(inputs)
+        // 🔥 ยิงไปที่ localhost:3000 ตรงๆ เลย (แก้ปัญหาหา Server ไม่เจอ)
+        const res = await axios.post('http://localhost:3000/api/login', { 
+            email: inputs.email,
+            password: inputs.password 
         });
 
-        const data = await response.json();
+        if (res.data.success) {
+            // ✅ Login สำเร็จ
+            const userData = { 
+                ...res.data.user, 
+                role: res.data.role,
+                isExecutive: res.data.isExecutive, // รับค่าจาก Backend
+                position: res.data.position 
+            };
+            
+            localStorage.setItem('user', JSON.stringify(userData));
 
-        if (data.success) {
-            // Login สำเร็จ
-            
-            // 🔥🔥🔥 แก้ไขตรงนี้ครับ 🔥🔥🔥
-            // เดิม: localStorage.setItem('user', JSON.stringify(data.user)); 
-            // เปลี่ยนเป็น: เอา role จาก data.role มารวมกับ data.user ก่อนบันทึก
-            
-            const userWithRole = { ...data.user, role: data.role };
-            localStorage.setItem('user', JSON.stringify(userWithRole));
-            
-            // 🔥🔥🔥 จบส่วนแก้ไข 🔥🔥🔥
+            alert('ยินดีต้อนรับ: ' + (userData.name || userData.email));
 
-            alert('ยินดีต้อนรับ: ' + data.user.name);
-            
-            if (data.role === 'staff' || data.role === 'admin') {
+            // 🔥 เช็คสิทธิ์และเปลี่ยนหน้า (ใช้ window.location.href เพื่อรีโหลดระบบ)
+            if (userData.isExecutive) {
+                // ถ้าเป็นผู้บริหาร -> ไป Dean Dashboard
+                window.location.href = '/admin/dean-dashboard';
+            } else if (res.data.role === 'staff' || res.data.role === 'admin') {
+                // ถ้าเป็น Staff -> ไป Admin Dashboard ปกติ
                 window.location.href = '/admin';
             } else {
-                window.location.href = '/';
+                // ถ้าเป็นนิสิต -> ไปหน้า Profile
+                window.location.href = '/profile';
             }
-            
+
         } else {
-            setError(data.message || 'เข้าสู่ระบบไม่สำเร็จ');
+            setError(res.data.message || 'อีเมลหรือรหัสผ่านไม่ถูกต้อง');
         }
+
     } catch (err) {
-        console.error('Error:', err);
-        setError('เชื่อมต่อ Server ไม่ได้ (ตรวจสอบว่ารัน node server.js หรือยัง)');
+        console.error('Login Error:', err);
+        if (err.response) {
+             setError(err.response.data.message || 'เกิดข้อผิดพลาดที่ Server');
+        } else {
+             // ถ้า Backend ไม่รัน จะเข้าเงื่อนไขนี้
+             setError('ไม่สามารถเชื่อมต่อ Server (3000) ได้ - กรุณารัน node server.js');
+        }
     }
   };
 
   return (
-    // 1. แก้ที่ Container: เอา justify-content-center ออก, เพิ่ม pt-5 เพื่อเว้นระยะจาก Navbar
     <Container fluid className="d-flex flex-column align-items-center pt-5" style={{ minHeight: '100vh' }}>
       
       <div className="text-center text-white mb-4 mt-4">
@@ -62,7 +71,6 @@ const LoginPage = () => {
         <p className="opacity-75 fw-light">COSCI Voice of Customer</p>
       </div>
 
-      {/* 2. แก้ที่ Card: เพิ่ม maxWidth เป็น 650px */}
       <Card className="border-0 shadow-lg rounded-4 overflow-hidden w-100" style={{ maxWidth: '650px' }}>
         <Card.Body className="p-5">
           <Form onSubmit={handleLogin}>
