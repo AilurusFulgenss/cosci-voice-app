@@ -15,19 +15,26 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // ตั้งค่าการเชื่อมต่อฐานข้อมูล
-const db = mysql.createConnection({
+const db = mysql.createPool({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASS,
-    database: process.env.DB_NAME
+    database: process.env.DB_NAME,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0,
+    enableKeepAlive: true, // ช่วยให้ไม่หลุดง่ายๆ
+    keepAliveInitialDelay: 0
 });
 
-db.connect((err) => {
+// เช็คว่าเชื่อมต่อได้ไหม (Optional)
+db.getConnection((err, connection) => {
     if (err) {
-        console.error('❌ Error connecting to MySQL:', err);
-        return;
+        console.error('❌ Database Connection Failed:', err);
+    } else {
+        console.log('✅ Database Connected via Pool');
+        connection.release(); // คืน Connection เข้าบ่อ
     }
-    console.log('✅ Connected to MySQL Database (XAMPP)');
 });
 
 // --- API Routes ---
