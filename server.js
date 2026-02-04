@@ -15,6 +15,7 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // ตั้งค่าการเชื่อมต่อฐานข้อมูล
+// ✅ ส่วนเชื่อมต่อ Database (แบบมี SSL + Pool กันหลุด)
 const db = mysql.createPool({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
@@ -23,17 +24,21 @@ const db = mysql.createPool({
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
-    enableKeepAlive: true, // ช่วยให้ไม่หลุดง่ายๆ
-    keepAliveInitialDelay: 0
+    enableKeepAlive: true,
+    // 👇 ต้องเพิ่มก้อนนี้เข้าไปครับ เพื่อเปิด SSL
+    ssl: {
+        minVersion: 'TLSv1.2',
+        rejectUnauthorized: true
+    }
 });
 
-// เช็คว่าเชื่อมต่อได้ไหม (Optional)
+// ส่วนเช็ค Connection (เหมือนเดิม)
 db.getConnection((err, connection) => {
     if (err) {
         console.error('❌ Database Connection Failed:', err);
     } else {
-        console.log('✅ Database Connected via Pool');
-        connection.release(); // คืน Connection เข้าบ่อ
+        console.log('✅ Database Connected via Secure Pool');
+        connection.release();
     }
 });
 
