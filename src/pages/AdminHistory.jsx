@@ -28,7 +28,7 @@ const AdminHistory = () => {
     const [selectedMajor, setSelectedMajor] = useState("ทั้งหมด");
 
     useEffect(() => {
-        fetch('/api/admin/tickets')
+        fetch('https://cosci-backend-pr6e.onrender.com/api/admin/tickets')
             .then(res => res.json())
             .then(data => {
                 if (data.success) {

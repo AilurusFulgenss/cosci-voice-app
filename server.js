@@ -92,25 +92,32 @@ app.post('/api/login', (req, res) => {
 // 2. API Register (แยกประเภท นิสิต/บุคลากร)
 // ==========================================
 app.post('/api/register', (req, res) => {
-    const { userType, buasriId, name, major } = req.body;
+    const { userType, buasriId } = req.body;
+    
+    // ตรวจสอบข้อมูลเบื้องต้น
+    if (!buasriId) return res.json({ success: false, message: 'กรุณากรอก Buasri ID' });
 
     if (userType === 'student') {
-        const sql = "INSERT INTO student (stu_buasri, stu_name, major) VALUES (?, ?, ?)";
-        db.query(sql, [buasriId, name, major], (err) => {
+        // นิสิต: บันทึก ID, ชื่อ=ID (ชั่วคราว), สาขา=ไม่ระบุ
+        const sql = "INSERT INTO student (stu_buasri, stu_name, major) VALUES (?, ?, 'ไม่ระบุ')";
+        // เราใช้ buasriId เป็นชื่อไปก่อน เพราะหน้าลงทะเบียนไม่ถามชื่อ
+        db.query(sql, [buasriId, buasriId], (err) => {
             if (err) {
                 console.error(err);
-                return res.json({ success: false, message: 'ลงทะเบียนไม่สำเร็จ (ID อาจจะซ้ำ)' });
+                // ถ้า Error มักจะแปลว่า ID ซ้ำ (Duplicate Key)
+                return res.json({ success: false, message: 'Buasri ID นี้มีอยู่ในระบบแล้ว (กรุณาไปที่หน้าเข้าสู่ระบบ)' });
             }
-            res.json({ success: true, message: 'ลงทะเบียนนิสิตสำเร็จ' });
+            res.json({ success: true, message: 'ลงทะเบียนสำเร็จ' });
         });
     } else {
+        // บุคลากร: บันทึก ID, ชื่อ=ID (ชั่วคราว)
         const sql = "INSERT INTO staff (staff_buasri, staff_name) VALUES (?, ?)";
-        db.query(sql, [buasriId, name], (err) => {
+        db.query(sql, [buasriId, buasriId], (err) => {
             if (err) {
                 console.error(err);
-                return res.json({ success: false, message: 'ลงทะเบียนไม่สำเร็จ (ID อาจจะซ้ำ)' });
+                return res.json({ success: false, message: 'Buasri ID นี้มีอยู่ในระบบแล้ว (กรุณาไปที่หน้าเข้าสู่ระบบ)' });
             }
-            res.json({ success: true, message: 'ลงทะเบียนบุคลากรสำเร็จ' });
+            res.json({ success: true, message: 'ลงทะเบียนสำเร็จ' });
         });
     }
 });

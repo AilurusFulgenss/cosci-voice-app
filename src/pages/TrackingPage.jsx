@@ -54,7 +54,7 @@ const TrackingPage = () => {
         }
         const user = JSON.parse(savedUser);
 
-        fetch(`/api/tickets/${user.id}`)
+        fetch(`https://cosci-backend-pr6e.onrender.com/api/tickets/${user.id}`)
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
