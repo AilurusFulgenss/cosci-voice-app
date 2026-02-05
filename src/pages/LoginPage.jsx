@@ -1,13 +1,13 @@
 // src/pages/LoginPage.jsx
 import React, { useState, useEffect } from 'react';
 import { Container, Card, Form, Button } from 'react-bootstrap';
-import { Link, useNavigate } from 'react-router-dom'; // เพิ่ม useNavigate เพื่อเปลี่ยนหน้า
+import { Link } from 'react-router-dom'; 
+import axios from 'axios'; // ✅ ใช้ axios แทน fetch เพื่อความเสถียร
 
 const LoginPage = () => {
   const [inputs, setInputs] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false); // 🟡 เพิ่มสถานะ Loading
-  const navigate = useNavigate(); // ใช้สำหรับเปลี่ยนหน้า
+  const [isLoading, setIsLoading] = useState(false);
 
   // ⚡️ แอบปลุก Server ทันทีที่เปิดหน้าเว็บ
   useEffect(() => {
@@ -23,41 +23,41 @@ const LoginPage = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
-    setIsLoading(true); // เริ่มหมุน
+    setIsLoading(true);
+
+    // เตรียมข้อมูลส่ง (ตัดช่องว่างออกกันพลาด)
+    const payload = {
+        email: inputs.email.trim(),
+        password: inputs.password
+    };
 
     try {
-        // 🔥 แก้ไข URL ให้ยิงไปที่ Render โดยตรง (สำคัญมาก!)
-        const response = await fetch('https://cosci-backend-pr6e.onrender.com/api/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(inputs)
-        });
+        // 🔥 ยิงไปที่ Render
+        const response = await axios.post('https://cosci-backend-pr6e.onrender.com/api/login', payload);
 
-        const data = await response.json();
-
-        if (data.success) {
-            // บันทึกข้อมูล
-            const userWithRole = { ...data.user, role: data.role };
-            localStorage.setItem('user', JSON.stringify(userWithRole));
+        if (response.data.success) {
+            // ✅ Login สำเร็จ: บันทึกข้อมูล
+            localStorage.setItem('user', JSON.stringify(response.data.user));
+            localStorage.setItem('role', response.data.role);
+            localStorage.setItem('isExecutive', response.data.isExecutive);
             
-            // alert('ยินดีต้อนรับ: ' + (data.user.name || data.user.stu_name || data.user.staff_name)); // แสดงชื่อจริงถ้ามี
-            
-            // เปลี่ยนหน้า (ใช้ navigate ของ React Router ดีกว่า window.location)
-            if (data.role === 'staff' || data.role === 'admin' || data.isExecutive) {
-               // ถ้าเป็นผู้บริหาร หรือ staff ให้ไปหน้า admin (หรือ dashboard ผู้บริหาร)
-               navigate(data.isExecutive ? '/admin-dashboard' : '/admin');
+            // 🚀 แยกทางตาม Logic ใหม่ (ใช้ window.location.href เพื่อรีเฟรช Navbar)
+            if (response.data.isExecutive) {
+               window.location.href = '/admin-dashboard'; // ผู้บริหาร -> กราฟ
+            } else if (response.data.role === 'staff') {
+               window.location.href = '/admin'; // เจ้าหน้าที่ -> รายการคำร้อง
             } else {
-               navigate('/dashboard');
+               window.location.href = '/'; // ✅ นิสิต -> หน้าแรก (Home)
             }
             
         } else {
-            setError(data.message || 'เข้าสู่ระบบไม่สำเร็จ');
+            setError(response.data.message || 'เข้าสู่ระบบไม่สำเร็จ');
         }
     } catch (err) {
         console.error('Error:', err);
         setError('เชื่อมต่อ Server ไม่ได้ (Server อาจกำลังตื่น กรุณากดใหม่อีกครั้ง)');
     } finally {
-        setIsLoading(false); // หยุดหมุนเสมอ
+        setIsLoading(false);
     }
   };
 
@@ -76,15 +76,16 @@ const LoginPage = () => {
             {error && <div className="alert alert-danger text-center py-2 mb-3 small">{error}</div>}
 
             <Form.Group className="mb-4">
-              <Form.Label className="fw-bold text-dark">Email หรือ รหัสนิสิต</Form.Label>
+              <Form.Label className="fw-bold text-dark">Email หรือ รหัสนิสิต / Buasri ID</Form.Label>
               <Form.Control 
                 type="text" 
                 name="email"
-                placeholder="เช่น 66130010123" 
+                placeholder="เช่น 66130010123 หรือ somchai.p" 
                 className="rounded-pill py-2 px-3 border-secondary-subtle"
                 onChange={handleChange}
                 required
-                disabled={isLoading} // ล็อกช่องตอนโหลด
+                autoComplete="username"
+                disabled={isLoading}
               />
             </Form.Group>
 
@@ -96,8 +97,8 @@ const LoginPage = () => {
                 placeholder="••••••••" 
                 className="rounded-pill py-2 px-3 border-secondary-subtle"
                 onChange={handleChange}
-                required
-                disabled={isLoading} // ล็อกช่องตอนโหลด
+                autoComplete="current-password"
+                disabled={isLoading}
               />
             </Form.Group>
 

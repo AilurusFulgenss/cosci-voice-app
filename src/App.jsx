@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, NavLink, useLocation } from 'react-router-dom'; // เพิ่ม useLocation
+import { BrowserRouter as Router, Routes, Route, Link, NavLink, useLocation } from 'react-router-dom';
 import { NavDropdown, Container, Navbar, Nav } from 'react-bootstrap';
 import { FaUserCircle } from 'react-icons/fa';
 
@@ -10,35 +10,37 @@ import TrackingPage from './pages/TrackingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import HistoryPage from './pages/HistoryPage';
-import AdminDashboard from './pages/AdminDashboard';
+
+// 🛑 Import หน้าแอดมิน (สังเกตชื่อไฟล์ดีๆ นะครับ)
+import AdminPage from './pages/AdminDashboard'; // อันนี้คือหน้า "ตารางคำร้อง" (ของเดิมของคุณ)
+import ExecutiveDashboard from './pages/ExecutiveDashboard'; // 🔥 อันนี้หน้าใหม่ "กราฟผู้บริหาร" (ต้องสร้างเพิ่ม)
 import AdminHistory from './pages/AdminHistory';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css'; 
 
-// สร้าง Component ย่อย เพื่อให้ใช้ useLocation ได้
 const AppContent = () => {
-  const location = useLocation(); // เช็คว่าอยู่หน้าไหน
+  const location = useLocation();
   
-  // อ่านข้อมูล User
   const [user, setUser] = useState(() => {
     const savedUser = localStorage.getItem('user');
     return savedUser ? JSON.parse(savedUser) : null;
   });
 
+  // อ่าน role และ isExecutive จาก LocalStorage เพิ่ม
+  const isExecutive = localStorage.getItem('isExecutive') === 'true';
+
   const handleLogout = () => {
-    localStorage.removeItem('user');
+    localStorage.clear(); // ล้างหมดเลยทั้ง user, role, isExecutive
     setUser(null);
     alert('ออกจากระบบเรียบร้อย');
     window.location.href = '/login';
   };
 
-  // Logic: ถ้า path ไม่ใช่ '/history' ให้โชว์คลื่น (ถ้าเป็น history จะเป็น false)
   const showWave = location.pathname !== '/history';
 
   return (
     <>
-      {/* ✅ แสดงคลื่นเฉพาะหน้าที่ไม่ใช่ History */}
       {showWave && <div className="wave-background"></div>}
 
       <Navbar expand="lg" variant="dark" className="pt-3 pb-3 mb-3" style={{backgroundColor: 'transparent'}}>
@@ -53,9 +55,10 @@ const AppContent = () => {
           
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="ms-auto align-items-center gap-lg-4">
-                  <NavLink to="/" className={({ isActive }) => isActive ? "nav-link fw-bold text-white" : "nav-link text-white opacity-75"}>
+              <NavLink to="/" className={({ isActive }) => isActive ? "nav-link fw-bold text-white" : "nav-link text-white opacity-75"}>
                 แจ้งเรื่อง
-                  </NavLink>
+              </NavLink>
+              
               {user && (
                 <>
                   <NavLink to="/tracking" className={({ isActive }) => isActive ? "nav-link fw-bold text-white" : "nav-link text-white opacity-75"}>
@@ -78,22 +81,33 @@ const AppContent = () => {
                   align="end"
                   menuVariant="dark"
                 >
-                  {(user.role === 'staff' || user.role === 'admin') && (
+                  {/* 🔹 ส่วนเมนู Admin / ผู้บริหาร (Logic ใหม่) */}
+                  {(user.role === 'staff' || isExecutive) && (
                     <>
-                      <NavDropdown.Item as={Link} to="/admin" className="fw-bold text-primary">
-                      🔧 Admin Dashboard
+                      {/* ถ้าเป็นผู้บริหาร ให้เห็นปุ่มดูกราฟ */}
+                      {isExecutive && (
+                        <NavDropdown.Item as={Link} to="/admin-dashboard" className="fw-bold text-warning">
+                          📊 Dashboard ผู้บริหาร
+                        </NavDropdown.Item>
+                      )}
+
+                      {/* Staff และ ผู้บริหาร เห็นปุ่มจัดการคำร้องทั้งคู่ */}
+                      <NavDropdown.Item as={Link} to="/admin" className="fw-bold text-info">
+                        📝 จัดการคำร้อง (Admin)
                       </NavDropdown.Item>
+                      
                       <NavDropdown.Divider />
                     </>
                   )}
+
                   <div className="px-3 py-2 border-bottom mb-2">
                     <div className="fw-bold text-white text-nowrap" style={{fontSize: '1rem'}}>
-                        {user.name}
+                        {user.name || user.stu_name || user.staff_name}
                     </div>
-                    <small className="text-white-50 d-block">{user.email}</small>
+                    <small className="text-white-50 d-block">{user.email || user.id}</small>
                   </div>
                   <NavDropdown.Item as={Link} to="/profile">ข้อมูลส่วนตัว</NavDropdown.Item>
-                  <NavDropdown.Item as={Link} to="/usage-info">ข้อมูลการใช้งาน</NavDropdown.Item>
+                  <NavDropdown.Item as={Link} to="/usage-info">คู่มือการใช้งาน</NavDropdown.Item>
                   <NavDropdown.Item as={Link} to="/about">เกี่ยวกับเรา</NavDropdown.Item>
                   <NavDropdown.Divider />
                   <NavDropdown.Item onClick={handleLogout} className="text-danger fw-bold">Logout</NavDropdown.Item>
@@ -111,11 +125,18 @@ const AppContent = () => {
         <Route path="/history" element={<HistoryPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        
+        {/* Placeholder Pages */}
         <Route path="/profile" element={<div className="text-white text-center mt-5"><h1>ข้อมูลส่วนตัว (Coming Soon)</h1></div>} />
         <Route path="/usage-info" element={<div className="text-white text-center mt-5"><h1>คู่มือการใช้งาน (Coming Soon)</h1></div>} />
         <Route path="/about" element={<div className="text-white text-center mt-5"><h1>เกี่ยวกับเรา (Coming Soon)</h1></div>} />
-        <Route path="/admin" element={<AdminDashboard />} />
+        
+        {/* 🔹 Routes สำหรับ Admin */}
+        <Route path="/admin" element={<AdminPage />} /> {/* หน้าตารางคำร้อง (Staff/Admin) */}
         <Route path="/admin/history" element={<AdminHistory />} />
+        
+        {/* 🔥 Route ใหม่สำหรับผู้บริหาร */}
+        <Route path="/admin-dashboard" element={<ExecutiveDashboard />} /> 
       </Routes>
     </>
   );
