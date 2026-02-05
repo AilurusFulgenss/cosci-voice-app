@@ -22,7 +22,10 @@ const db = mysql.createPool({
     connectionLimit: 10,
     queueLimit: 0,
     enableKeepAlive: true,
-    ssl: { minVersion: 'TLSv1.2', rejectUnauthorized: true }
+    ssl: {
+        minVersion: 'TLSv1.2',
+        rejectUnauthorized: false // 👈 เปลี่ยนเป็น false ช่วยแก้ปัญหาต่อ Database ไม่ติดในบาง Cloud
+    }
 });
 
 // --- API Routes ---
