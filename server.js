@@ -4,16 +4,15 @@ import express from 'express';
 import mysql from 'mysql2';
 import cors from 'cors';
 import bodyParser from 'body-parser';
-import bcrypt from 'bcrypt'; // 🔥 แก้จุดที่ 1: เพิ่มบรรทัดนี้ ไม่งั้น Register พัง
+import bcrypt from 'bcrypt';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ตั้งค่า CORS
 app.use(cors());
 app.use(bodyParser.json());
 
-// ✅ ตั้งค่าการเชื่อมต่อฐานข้อมูล (SSL + Pool)
+// เชื่อมต่อ Database
 const db = mysql.createPool({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
@@ -23,107 +22,91 @@ const db = mysql.createPool({
     connectionLimit: 10,
     queueLimit: 0,
     enableKeepAlive: true,
-    ssl: {
-        minVersion: 'TLSv1.2',
-        rejectUnauthorized: true
-    }
-});
-
-// เช็ค Connection
-db.getConnection((err, connection) => {
-    if (err) {
-        console.error('❌ Database Connection Failed:', err);
-    } else {
-        console.log('✅ Database Connected via Secure Pool');
-        connection.release();
-    }
+    ssl: { minVersion: 'TLSv1.2', rejectUnauthorized: true }
 });
 
 // --- API Routes ---
 
-app.get('/', (req, res) => {
-    res.send('Cosci Voice API is running on Localhost!');
-});
-
-// 1. API Login
+// 1. API Login (Logic ใหม่: เช็ค Buasri -> ตัดนามสกุล -> เช็คผู้บริหาร)
 app.post('/api/login', (req, res) => {
-    const { email } = req.body;
-    let userId = email;
-    
-    // แปลงให้เป็นรหัสล้วน (ตัด @g.swu.ac.th ทิ้ง)
-    if (userId.includes('@')) {
-        userId = userId.split('@')[0];
-    }
-    console.log('🔑 Login Attempt:', userId);
+    const { email, password } = req.body; // email ในที่นี้คือ input ที่ user กรอก (Buasri ID)
+    const loginId = email.trim(); // ตัดช่องว่างหน้าหลังออก
 
-    // ฟังก์ชันย่อย: เช็คว่าเป็นผู้บริหารไหม?
-    const checkExecutiveAndRespond = (foundUser, role) => {
-        // เช็คทั้ง staffID และ staffID2 (เผื่อคนใส่รหัสสั้น/ยาว)
-        const sqlCheckAdmin = "SELECT * FROM major_temp WHERE staffID = ? OR staffID2 = ?";
-        
-        db.query(sqlCheckAdmin, [foundUser.id, foundUser.id], (err, adminResults) => {
-            let isExecutive = false;
-            let position = '';
+    console.log('🔑 Login Attempt with Buasri ID:', loginId);
 
-            if (!err && adminResults.length > 0) {
-                isExecutive = true;
-                position = adminResults[0].position || 'ผู้บริหาร';
-                console.log(`✅ User ${foundUser.id} เป็นผู้บริหาร (${position})`);
-            }
+    // Step 1: เช็คว่าเป็น "นิสิต" หรือไม่? (ดูจาก stu_buasri)
+    const sqlStudent = "SELECT * FROM student WHERE stu_buasri = ?";
+    db.query(sqlStudent, [loginId], async (err, results) => {
+        if (err) return res.status(500).json({ success: false, message: 'DB Error (Student)' });
+
+        if (results.length > 0) {
+            // ✅ เจอนิสิต
+            const user = results[0];
+            // เช็คระหัสผ่าน
+            const match = await bcrypt.compare(password, user.stu_password);
+            if (!match) return res.json({ success: false, message: 'รหัสผ่านไม่ถูกต้อง' });
 
             return res.json({
                 success: true,
-                role: role,
-                isExecutive: isExecutive,
-                position: position,
-                user: foundUser
-            });
-        });
-    };
-
-    // --- เริ่มต้นค้นหา User ---
-
-    // 1. ค้นหาในตารางนิสิต (Student)
-    // 🔥 แก้จุดที่ 2: ลบ OR stu_buasri ออก เพราะตารางนิสิตไม่มีคอลัมน์นี้
-    const sqlStudent = "SELECT * FROM student WHERE stu_id = ?";
-    
-    db.query(sqlStudent, [userId], (err, results) => {
-        if (err) {
-            console.error("Student DB Error:", err);
-            return res.status(500).json({ success: false, message: 'DB Error (Student)' });
-        }
-
-        if (results.length > 0) {
-            // เจอนิสิต
-            const user = results[0];
-            checkExecutiveAndRespond({
-                id: user.stu_id,
-                name: user.stu_name,
-                email: user.stu_id + '@g.swu.ac.th',
-                major: user.major
-            }, 'student');
-        } else {
-            // 2. ไม่เจอนิสิต -> ไปหาในตารางบุคลากร (Staff)
-            const sqlStaff = "SELECT * FROM staff WHERE staff_id = ? OR staff_buasri = ?";
-            
-            db.query(sqlStaff, [userId, userId], (err, staffResults) => {
-                if (err) {
-                    console.error("Staff DB Error:", err);
-                    return res.status(500).json({ success: false, message: 'DB Error (Staff)' });
+                role: 'student',
+                isExecutive: false,
+                user: {
+                    id: user.stu_buasri,
+                    name: user.stu_name,
+                    major: user.major // ส่งเอกไปด้วย
                 }
+            });
+        } else {
+            // ❌ ไม่เจอนิสิต -> Step 2: ไปเช็ค "บุคลากร" (ดูจาก staff_buasri)
+            const sqlStaff = "SELECT * FROM staff WHERE staff_buasri = ?";
+            db.query(sqlStaff, [loginId], async (err, staffResults) => {
+                if (err) return res.status(500).json({ success: false, message: 'DB Error (Staff)' });
 
                 if (staffResults.length > 0) {
-                    // เจอบุคลากร
+                    // ✅ เจอบุคลากร
                     const staff = staffResults[0];
-                    const mainId = staff.staff_id || staff.staff_buasri; // ใช้ ID ที่มี
-                    
-                    checkExecutiveAndRespond({
-                        id: mainId,
-                        name: staff.staff_name,
-                        email: staff.staff_email || (staff.staff_buasri + '@g.swu.ac.th')
-                    }, 'staff');
+                    // เช็คระหัสผ่าน
+                    const match = await bcrypt.compare(password, staff.staff_password);
+                    if (!match) return res.json({ success: false, message: 'รหัสผ่านไม่ถูกต้อง' });
+
+                    // Step 3 & 4: เอาชื่อมาตัดนามสกุลออก
+                    // ตัวอย่าง: "ผศ.ดร.ปรวัน แพทยานนท์" -> split(' ') -> ["ผศ.ดร.ปรวัน", "แพทยานนท์"]
+                    const fullName = staff.staff_name || '';
+                    const nameOnly = fullName.split(' ')[0]; // เอาแค่ก้อนแรก
+
+                    console.log(`Staff Found: ${fullName} -> Checking Executive as: ${nameOnly}`);
+
+                    // Step 5: เอาชื่อที่ตัดแล้ว ไปเช็คใน major_temp
+                    const sqlCheckAdmin = "SELECT * FROM major_temp WHERE Name = ?";
+                    db.query(sqlCheckAdmin, [nameOnly], (err, adminResults) => {
+                        let isExecutive = false;
+                        let position = '';
+
+                        if (!err && adminResults.length > 0) {
+                            // ✅ เจอใน major_temp = ผู้บริหาร
+                            isExecutive = true;
+                            position = adminResults[0].position || 'ผู้บริหาร';
+                            console.log('✅ Matches Executive list!');
+                        } else {
+                            console.log('ℹ️ Normal Staff (Not in Executive list)');
+                        }
+
+                        // Step 6: ส่งผลลัพธ์กลับ
+                        return res.json({
+                            success: true,
+                            role: 'staff',
+                            isExecutive: isExecutive,
+                            position: position,
+                            user: {
+                                id: staff.staff_buasri,
+                                name: staff.staff_name,
+                                email: staff.staff_email
+                            }
+                        });
+                    });
+
                 } else {
-                    // ไม่เจอเลยทั้งคู่
+                    // ❌ ไม่เจออะไรเลย
                     return res.json({ success: false, message: 'ไม่พบข้อมูลผู้ใช้งานในระบบ' });
                 }
             });
@@ -131,37 +114,36 @@ app.post('/api/login', (req, res) => {
     });
 });
 
-// ==========================================
-// 2. API Register (แก้ Error Unused Vars)
-// ==========================================
+// 2. API Register (รองรับการแยกประเภท)
 app.post('/api/register', async (req, res) => {
-    const { userType, id, name, email, password, major } = req.body;
+    const { userType, buasriId, name, password, major } = req.body;
     
-    // เข้ารหัส Password
+    // Encrypt Password
     let hashedPassword;
     try {
         hashedPassword = await bcrypt.hash(password, 10);
     } catch (error) {
-        console.error("Encryption Error:", error); // 🔥 เพิ่มบรรทัดนี้: เพื่อใช้งานตัวแปร error
-        return res.json({ success: false, message: 'Error encrypting password' });
+        console.error("Encryption Error:", error);
+        return res.json({ success: false, message: 'Password Encryption Failed' });
     }
 
     if (userType === 'student') {
-        const sql = "INSERT INTO student (stu_id, stu_name, stu_password, major) VALUES (?, ?, ?, ?)";
-        db.query(sql, [id, name, hashedPassword, major], (err) => {
+        // นิสิต: เก็บ stu_buasri, stu_name, stu_password, major
+        const sql = "INSERT INTO student (stu_buasri, stu_name, stu_password, major) VALUES (?, ?, ?, ?)";
+        db.query(sql, [buasriId, name, hashedPassword, major], (err) => {
             if (err) {
                 console.error(err);
-                return res.json({ success: false, message: 'ลงทะเบียนไม่สำเร็จ (รหัสซ้ำหรือระบบขัดข้อง)' });
+                return res.json({ success: false, message: 'ลงทะเบียนไม่สำเร็จ (Buasri ID ซ้ำหรือระบบขัดข้อง)' });
             }
             res.json({ success: true, message: 'ลงทะเบียนนิสิตสำเร็จ!' });
         });
     } else {
-        // staff
-        const sql = "INSERT INTO staff (staff_buasri, staff_name, staff_password, staff_email) VALUES (?, ?, ?, ?)";
-        db.query(sql, [id, name, hashedPassword, email], (err) => {
+        // บุคลากร: เก็บ staff_buasri, staff_name, staff_password
+        const sql = "INSERT INTO staff (staff_buasri, staff_name, staff_password) VALUES (?, ?, ?)";
+        db.query(sql, [buasriId, name, hashedPassword], (err) => {
             if (err) {
                 console.error(err);
-                return res.json({ success: false, message: 'ลงทะเบียนไม่สำเร็จ (รหัสซ้ำหรือระบบขัดข้อง)' });
+                return res.json({ success: false, message: 'ลงทะเบียนไม่สำเร็จ (Buasri ID ซ้ำหรือระบบขัดข้อง)' });
             }
             res.json({ success: true, message: 'ลงทะเบียนบุคลากรสำเร็จ!' });
         });
