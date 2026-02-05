@@ -131,7 +131,9 @@ app.post('/api/login', (req, res) => {
     });
 });
 
-// 2. API Register
+// ==========================================
+// 2. API Register (แก้ Error Unused Vars)
+// ==========================================
 app.post('/api/register', async (req, res) => {
     const { userType, id, name, email, password, major } = req.body;
     
@@ -140,6 +142,7 @@ app.post('/api/register', async (req, res) => {
     try {
         hashedPassword = await bcrypt.hash(password, 10);
     } catch (error) {
+        console.error("Encryption Error:", error); // 🔥 เพิ่มบรรทัดนี้: เพื่อใช้งานตัวแปร error
         return res.json({ success: false, message: 'Error encrypting password' });
     }
 
