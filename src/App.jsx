@@ -15,6 +15,8 @@ import HistoryPage from './pages/HistoryPage';
 import AdminPage from './pages/AdminDashboard'; // อันนี้คือหน้า "ตารางคำร้อง" (ของเดิมของคุณ)
 import ExecutiveDashboard from './pages/ExecutiveDashboard'; // 🔥 อันนี้หน้าใหม่ "กราฟผู้บริหาร" (ต้องสร้างเพิ่ม)
 import AdminHistory from './pages/AdminHistory';
+import GuestPage from './pages/GuestPage';
+import GuestTrackingPage from './pages/GuestTrackingPage';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css'; 
@@ -136,7 +138,11 @@ const AppContent = () => {
         <Route path="/admin/history" element={<AdminHistory />} />
         
         {/* 🔥 Route ใหม่สำหรับผู้บริหาร */}
-        <Route path="/admin-dashboard" element={<ExecutiveDashboard />} /> 
+        <Route path="/admin-dashboard" element={<ExecutiveDashboard />} />
+
+        {/* Routes สำหรับ Guest */}
+        <Route path="/guest" element={<GuestPage />} />
+        <Route path="/guest-tracking" element={<GuestTrackingPage />} />
       </Routes>
     </>
   );

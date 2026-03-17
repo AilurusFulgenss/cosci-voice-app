@@ -181,7 +181,12 @@ const AdminDashboard = () => {
                                         <td>{new Date(ticket.created_at).toLocaleDateString('th-TH')}</td>
                                         <td><Badge bg="light" text="dark" className="border">{ticket.major || '-'}</Badge></td>
                                         <td className="text-truncate" style={{maxWidth: '200px'}} title={ticket.title}>{ticket.title}</td>
-                                        <td>{ticket.reporter_name}</td>
+                                        <td>
+                                            {ticket.reporter_name}
+                                            {ticket.user_type === 'guest' && (
+                                                <Badge bg="warning" text="dark" className="ms-1" style={{fontSize:'0.7rem'}}>ภายนอก</Badge>
+                                            )}
+                                        </td>
                                         <td>{ticket.department}</td>
                                         <td>{getStatusBadge(ticket.status)}</td>
                                         <td>

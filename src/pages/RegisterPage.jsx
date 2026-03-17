@@ -43,15 +43,17 @@ const RegisterPage = () => {
     };
 
     return (
-        <Container fluid className="d-flex flex-column align-items-center justify-content-center" 
-            style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)' }}>
+        // ✅ ใช้ Container ตัวเดิมของคุณ (เอา background ออก เพื่อให้ใช้ Global CSS ของคุณ)
+        <Container fluid className="d-flex flex-column align-items-center pt-5" style={{ minHeight: '100vh' }}>
             
-            <div className="text-center text-dark mb-4">
+            {/* Header ข้อความสีขาวตามเดิม */}
+            <div className="text-center text-white mb-4 mt-3">
                 <h1 className="fw-bold display-5">ยืนยันตัวตน (Registration)</h1>
                 <p className="opacity-75 fw-light">กรุณากรอก Buasri ID เพื่อตรวจสอบสิทธิ์การใช้งาน</p>
             </div>
 
-            <Card className="border-0 shadow-lg rounded-4 overflow-hidden w-100" style={{ maxWidth: '500px' }}>
+            {/* ✅ Card ปรับขนาดให้พอดีกับเนื้อหา (ลดความกว้างลงนิดนหน่อยเพราะช่องกรอกน้อยลง) */}
+            <Card className="border-0 shadow-lg rounded-4 overflow-hidden w-100 mb-5" style={{ maxWidth: '600px' }}>
                 <Card.Body className="p-4 p-md-5">
                     
                     {/* ปุ่มเลือกประเภท (Tabs) */}
@@ -63,7 +65,7 @@ const RegisterPage = () => {
                                 className="fw-bold py-2"
                                 style={activeTab === 'student' ? { backgroundColor: '#2e86ab', borderColor: '#2e86ab', color: 'white' } : { color: '#666' }}
                             >
-                                🎓 นิสิต
+                                นิสิต
                             </Button>
                             <Button 
                                 variant={activeTab === 'staff' ? 'primary' : 'light'}
@@ -71,7 +73,7 @@ const RegisterPage = () => {
                                 className="fw-bold py-2"
                                 style={activeTab === 'staff' ? { backgroundColor: '#2e86ab', borderColor: '#2e86ab', color: 'white' } : { color: '#666' }}
                             >
-                                👔 อาจารย์/บุคลากร
+                                อาจารย์/บุคลากร
                             </Button>
                         </ButtonGroup>
                     </div>
@@ -83,7 +85,7 @@ const RegisterPage = () => {
                             </Form.Label>
                             <Form.Control 
                                 type="text" 
-                                placeholder={activeTab === 'student' ? "เช่น co66xxxx" : "เช่น porawanp"} 
+                                placeholder={activeTab === 'student' ? "เช่น co66xxxx" : "buasriid"} 
                                 className="rounded-pill border-secondary-subtle py-2 px-3" 
                                 value={buasriId}
                                 onChange={(e) => setBuasriId(e.target.value)} 
@@ -101,7 +103,7 @@ const RegisterPage = () => {
                             style={{ backgroundColor: '#2e86ab' }}
                             disabled={isLoading}
                         >
-                            {isLoading ? '⏳ กำลังตรวจสอบ...' : 'ตรวจสอบและลงทะเบียน'}
+                            {isLoading ? 'กำลังตรวจสอบ...' : 'ตรวจสอบและลงทะเบียน'}
                         </Button>
 
                         <div className="text-center">

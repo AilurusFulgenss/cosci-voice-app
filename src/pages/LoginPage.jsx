@@ -76,11 +76,11 @@ const LoginPage = () => {
             {error && <div className="alert alert-danger text-center py-2 mb-3 small">{error}</div>}
 
             <Form.Group className="mb-4">
-              <Form.Label className="fw-bold text-dark">Email หรือ รหัสนิสิต / Buasri ID</Form.Label>
+              <Form.Label className="fw-bold text-dark">Buasri ID</Form.Label>
               <Form.Control 
                 type="text" 
                 name="email"
-                placeholder="เช่น 66130010123 หรือ somchai.p" 
+                placeholder="เช่น co66..." 
                 className="rounded-pill py-2 px-3 border-secondary-subtle"
                 onChange={handleChange}
                 required
@@ -119,6 +119,15 @@ const LoginPage = () => {
             <div className="text-center">
               <small className="text-muted">ยังไม่มีบัญชีใช่ไหม? </small>
               <Link to="/register" className="fw-bold text-decoration-none" style={{ color: '#005b8e' }}>ลงทะเบียนที่นี่</Link>
+            </div>
+
+            <hr className="my-4" />
+
+            <div className="text-center">
+              <small className="text-muted d-block mb-2">ไม่ใช่นิสิต/บุคลากร?</small>
+              <Link to="/guest" className="btn btn-outline-secondary rounded-pill px-4 w-100" style={{ fontSize: '0.9rem' }}>
+                ร้องเรียนในฐานะบุคคลภายนอก &rarr;
+              </Link>
             </div>
 
           </Form>
