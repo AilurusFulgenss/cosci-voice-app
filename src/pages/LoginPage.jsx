@@ -125,8 +125,11 @@ const LoginPage = () => {
 
             <div className="text-center">
               <small className="text-muted d-block mb-2">ไม่ใช่นิสิต/บุคลากร?</small>
-              <Link to="/guest" className="btn btn-outline-secondary rounded-pill px-4 w-100" style={{ fontSize: '0.9rem' }}>
+              <Link to="/guest" className="btn btn-outline-secondary rounded-pill px-4 w-100 mb-2" style={{ fontSize: '0.9rem' }}>
                 ร้องเรียนในฐานะบุคคลภายนอก &rarr;
+              </Link>
+              <Link to="/guest-tracking" className="btn btn-outline-primary rounded-pill px-4 w-100" style={{ fontSize: '0.9rem' }}>
+                ติดตามเรื่องร้องเรียน (บุคคลภายนอก) &rarr;
               </Link>
             </div>
 
