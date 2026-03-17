@@ -4,7 +4,7 @@ import express from 'express';
 import mysql from 'mysql2';
 import cors from 'cors';
 import bodyParser from 'body-parser';
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -36,18 +36,7 @@ db.getConnection((err, connection) => {
     }
 });
 
-// ==========================================
-// Config Nodemailer (Gmail SMTP)
-// ==========================================
-const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-    },
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // --- API Routes ---
 
@@ -169,8 +158,8 @@ app.post('/api/guest/send-otp', (req, res) => {
 
             // ส่งอีเมล
             try {
-                await transporter.sendMail({
-                    from: `"COSCI Voice" <${process.env.EMAIL_USER}>`,
+                await resend.emails.send({
+                    from: 'COSCI Voice <onboarding@resend.dev>',
                     to: email,
                     subject: 'รหัส OTP สำหรับการร้องเรียน COSCI Voice',
                     html: `
@@ -264,8 +253,8 @@ app.post('/api/tickets', (req, res) => {
             // ส่งอีเมลแจ้ง ticket ID ให้ guest
             if (resolvedUserType === 'guest' && guest_email) {
                 try {
-                    await transporter.sendMail({
-                        from: `"COSCI Voice" <${process.env.EMAIL_USER}>`,
+                    await resend.emails.send({
+                        from: 'COSCI Voice <onboarding@resend.dev>',
                         to: guest_email,
                         subject: 'ได้รับเรื่องร้องเรียนของคุณแล้ว — COSCI Voice',
                         html: `
