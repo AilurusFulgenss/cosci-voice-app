@@ -156,14 +156,16 @@ app.post('/api/guest/send-otp', (req, res) => {
 
             // ส่งอีเมล
             try {
-                await fetch('https://api.brevo.com/v3/smtp/email', {
+                console.log('Sending email via Brevo to:', email);
+                console.log('API Key exists:', !!process.env.BREVO_API_KEY);
+                const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'api-key': process.env.BREVO_API_KEY
                     },
                     body: JSON.stringify({
-                        sender: { name: 'COSCI Voice', email: 'noreply@cosci-voice.gt.tc' },
+                        sender: { name: 'COSCI Voice', email: 'kudatonnam@gmail.com' },
                         to: [{ email: email }],
                         subject: 'รหัส OTP สำหรับการร้องเรียน COSCI Voice',
                         htmlContent: `
@@ -181,6 +183,12 @@ app.post('/api/guest/send-otp', (req, res) => {
                         `
                     })
                 });
+                const brevoData = await brevoRes.json();
+                console.log('Brevo status:', brevoRes.status);
+                console.log('Brevo response:', JSON.stringify(brevoData));
+                if (!brevoRes.ok) {
+                    console.error('Brevo Error:', brevoData);
+                }
                 res.json({ success: true, message: 'ส่ง OTP ไปที่อีเมลแล้ว' });
             } catch (mailErr) {
                 console.error("Send OTP Mail Error:", mailErr);
@@ -258,14 +266,16 @@ app.post('/api/tickets', (req, res) => {
             // ส่งอีเมลแจ้ง ticket ID ให้ guest
             if (resolvedUserType === 'guest' && guest_email) {
                 try {
-                    await fetch('https://api.brevo.com/v3/smtp/email', {
+                    console.log('Sending ticket confirmation via Brevo to:', guest_email);
+                    console.log('API Key exists:', !!process.env.BREVO_API_KEY);
+                    const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                             'api-key': process.env.BREVO_API_KEY
                         },
                         body: JSON.stringify({
-                            sender: { name: 'COSCI Voice', email: 'noreply@cosci-voice.gt.tc' },
+                            sender: { name: 'COSCI Voice', email: 'kudatonnam@gmail.com' },
                             to: [{ email: guest_email }],
                             subject: 'ได้รับเรื่องร้องเรียนของคุณแล้ว — COSCI Voice',
                             htmlContent: `
@@ -284,6 +294,12 @@ app.post('/api/tickets', (req, res) => {
                             `
                         })
                     });
+                    const brevoData = await brevoRes.json();
+                    console.log('Brevo status:', brevoRes.status);
+                    console.log('Brevo response:', JSON.stringify(brevoData));
+                    if (!brevoRes.ok) {
+                        console.error('Brevo Error:', brevoData);
+                    }
                 } catch (mailErr) {
                     console.error("Send Ticket Confirmation Mail Error:", mailErr);
                     // ไม่ return error เพราะ ticket ถูกบันทึกแล้ว แค่แจ้ง warning
