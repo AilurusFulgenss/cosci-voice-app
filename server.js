@@ -4,7 +4,6 @@ import express from 'express';
 import mysql from 'mysql2';
 import cors from 'cors';
 import bodyParser from 'body-parser';
-import { Resend } from 'resend';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -36,7 +35,6 @@ db.getConnection((err, connection) => {
     }
 });
 
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 // --- API Routes ---
 
@@ -158,23 +156,30 @@ app.post('/api/guest/send-otp', (req, res) => {
 
             // ส่งอีเมล
             try {
-                await resend.emails.send({
-                    from: 'COSCI Voice <onboarding@resend.dev>',
-                    to: email,
-                    subject: 'รหัส OTP สำหรับการร้องเรียน COSCI Voice',
-                    html: `
-                        <div style="font-family: sans-serif; max-width: 480px; margin: auto; padding: 32px; border: 1px solid #e0e0e0; border-radius: 12px;">
-                            <h2 style="color: #2e86ab; margin-top: 0;">COSCI Voice</h2>
-                            <p>สวัสดีคุณ <strong>${name.trim()}</strong></p>
-                            <p>รหัส OTP ของคุณสำหรับการยืนยันตัวตนเพื่อส่งเรื่องร้องเรียนคือ:</p>
-                            <div style="font-size: 2.5rem; font-weight: bold; letter-spacing: 0.3rem; color: #2e86ab; text-align: center; padding: 16px; background: #f0f8ff; border-radius: 8px; margin: 16px 0;">
-                                ${otp}
+                await fetch('https://api.brevo.com/v3/smtp/email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'api-key': process.env.BREVO_API_KEY
+                    },
+                    body: JSON.stringify({
+                        sender: { name: 'COSCI Voice', email: 'noreply@cosci-voice.gt.tc' },
+                        to: [{ email: email }],
+                        subject: 'รหัส OTP สำหรับการร้องเรียน COSCI Voice',
+                        htmlContent: `
+                            <div style="font-family: sans-serif; max-width: 480px; margin: auto; padding: 32px; border: 1px solid #e0e0e0; border-radius: 12px;">
+                                <h2 style="color: #2e86ab; margin-top: 0;">COSCI Voice</h2>
+                                <p>สวัสดีคุณ <strong>${name.trim()}</strong></p>
+                                <p>รหัส OTP ของคุณสำหรับการยืนยันตัวตนเพื่อส่งเรื่องร้องเรียนคือ:</p>
+                                <div style="font-size: 2.5rem; font-weight: bold; letter-spacing: 0.3rem; color: #2e86ab; text-align: center; padding: 16px; background: #f0f8ff; border-radius: 8px; margin: 16px 0;">
+                                    ${otp}
+                                </div>
+                                <p style="color: #666; font-size: 0.9rem;">รหัสนี้จะหมดอายุใน <strong>10 นาที</strong> กรุณาอย่าเปิดเผยรหัสนี้แก่ผู้อื่น</p>
+                                <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
+                                <p style="color: #999; font-size: 0.8rem;">หากคุณไม่ได้ทำรายการนี้ กรุณาละเว้นอีเมลฉบับนี้</p>
                             </div>
-                            <p style="color: #666; font-size: 0.9rem;">รหัสนี้จะหมดอายุใน <strong>10 นาที</strong> กรุณาอย่าเปิดเผยรหัสนี้แก่ผู้อื่น</p>
-                            <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
-                            <p style="color: #999; font-size: 0.8rem;">หากคุณไม่ได้ทำรายการนี้ กรุณาละเว้นอีเมลฉบับนี้</p>
-                        </div>
-                    `
+                        `
+                    })
                 });
                 res.json({ success: true, message: 'ส่ง OTP ไปที่อีเมลแล้ว' });
             } catch (mailErr) {
@@ -253,24 +258,31 @@ app.post('/api/tickets', (req, res) => {
             // ส่งอีเมลแจ้ง ticket ID ให้ guest
             if (resolvedUserType === 'guest' && guest_email) {
                 try {
-                    await resend.emails.send({
-                        from: 'COSCI Voice <onboarding@resend.dev>',
-                        to: guest_email,
-                        subject: 'ได้รับเรื่องร้องเรียนของคุณแล้ว — COSCI Voice',
-                        html: `
-                            <div style="font-family: sans-serif; max-width: 480px; margin: auto; padding: 32px; border: 1px solid #e0e0e0; border-radius: 12px;">
-                                <h2 style="color: #2e86ab; margin-top: 0;">COSCI Voice</h2>
-                                <p>สวัสดีคุณ <strong>${guest_name || ''}</strong></p>
-                                <p>ระบบได้รับเรื่องร้องเรียนของคุณแล้ว กรุณาจดบันทึก <strong>Ticket ID</strong> นี้ไว้เพื่อติดตามสถานะ:</p>
-                                <div style="font-size: 2rem; font-weight: bold; color: #2e86ab; text-align: center; padding: 16px; background: #f0f8ff; border-radius: 8px; margin: 16px 0;">
-                                    #${ticketId}
+                    await fetch('https://api.brevo.com/v3/smtp/email', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'api-key': process.env.BREVO_API_KEY
+                        },
+                        body: JSON.stringify({
+                            sender: { name: 'COSCI Voice', email: 'noreply@cosci-voice.gt.tc' },
+                            to: [{ email: guest_email }],
+                            subject: 'ได้รับเรื่องร้องเรียนของคุณแล้ว — COSCI Voice',
+                            htmlContent: `
+                                <div style="font-family: sans-serif; max-width: 480px; margin: auto; padding: 32px; border: 1px solid #e0e0e0; border-radius: 12px;">
+                                    <h2 style="color: #2e86ab; margin-top: 0;">COSCI Voice</h2>
+                                    <p>สวัสดีคุณ <strong>${guest_name || ''}</strong></p>
+                                    <p>ระบบได้รับเรื่องร้องเรียนของคุณแล้ว กรุณาจดบันทึก <strong>Ticket ID</strong> นี้ไว้เพื่อติดตามสถานะ:</p>
+                                    <div style="font-size: 2rem; font-weight: bold; color: #2e86ab; text-align: center; padding: 16px; background: #f0f8ff; border-radius: 8px; margin: 16px 0;">
+                                        #${ticketId}
+                                    </div>
+                                    <p>คุณสามารถติดตามสถานะได้ที่หน้า <strong>"ติดตามเรื่องร้องเรียน (บุคคลภายนอก)"</strong> บนเว็บไซต์ โดยใช้ Ticket ID และอีเมลนี้</p>
+                                    <p style="color: #666; font-size: 0.9rem;">หัวข้อที่ส่ง: <em>${title}</em></p>
+                                    <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
+                                    <p style="color: #999; font-size: 0.8rem;">ขอบคุณที่ร่วมพัฒนาคณะ COSCI</p>
                                 </div>
-                                <p>คุณสามารถติดตามสถานะได้ที่หน้า <strong>"ติดตามเรื่องร้องเรียน (บุคคลภายนอก)"</strong> บนเว็บไซต์ โดยใช้ Ticket ID และอีเมลนี้</p>
-                                <p style="color: #666; font-size: 0.9rem;">หัวข้อที่ส่ง: <em>${title}</em></p>
-                                <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
-                                <p style="color: #999; font-size: 0.8rem;">ขอบคุณที่ร่วมพัฒนาคณะ COSCI</p>
-                            </div>
-                        `
+                            `
+                        })
                     });
                 } catch (mailErr) {
                     console.error("Send Ticket Confirmation Mail Error:", mailErr);
